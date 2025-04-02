@@ -1,0 +1,553 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+}
+
+enum WeekDay {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+  PATIENT
+}
+
+enum ReservationStatus {
+  REGISTERED
+  PENDING
+  DONE
+  REJECTED
+}
+
+enum StockStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+}
+
+enum PeripheralStatus {
+  DRAFT
+  ASSIGNED
+}
+
+model User {
+  id                  String             @id @default(cuid()) @map("_id")
+  email               String             @unique
+  password            String
+  name                String
+  phoneNumber         String
+  gender              Gender
+  birthDate           DateTime?
+  address             String?
+  city                String?
+  zipCode             String?
+  imageUrl            String?
+  jobType             JobType?
+  specialist          String?
+  designation         String?
+  role                Role               @default(PATIENT)
+  otpCode             String?
+  otpCodeExpiry       DateTime?
+  resetToken          String?
+  resetTokenExpiry    DateTime?
+  loginSessionToken   String?
+  loginSessionExpiry  DateTime?
+  isVerified          Boolean            @default(false)
+  isHired             Boolean            @default(false)
+  sessions            Session[]
+  accounts            Account[]
+  workingHours        WorkingHours[]
+  assignedTreatments  UserTreatment[]
+  treatmentReviews    TreatmentReviews[]
+  userReservations    Reservation[]      @relation(name: "UserReservation")
+  dentistReservations Reservation[]      @relation(name: "DentistReservation")
+  habitAnswer         HabitAnswer[]
+  clinicId            String?
+  clinic              Clinic?            @relation(fields: [clinicId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Session {
+  id        String   @id @map("_id")
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @map("_id")
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model WorkingHours {
+  id      String  @id @default(cuid()) @map("_id")
+  weekDay WeekDay
+  from    String
+  to      String
+  user    User    @relation(fields: [userId], references: [id])
+  userId  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TreatmentCategory {
+  id         String      @id @default(cuid()) @map("_id")
+  name       String      @unique
+  treatments Treatment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TreatmentComponents {
+  id                 String               @id @default(cuid()) @map("_id")
+  name               String
+  price              Float
+  treatmentComponent TreatmentComponent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TreatmentComponent {
+  id          String              @id @default(cuid()) @map("_id")
+  componentId String
+  component   TreatmentComponents @relation(fields: [componentId], references: [id])
+  quantity    Int?
+  treatmentId String?
+  treatment   Treatment?          @relation(fields: [treatmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TreatmentVisit {
+  id                String     @id @default(cuid()) @map("_id")
+  name              String
+  description       String?
+  price             String?
+  estimatedDuration String
+  treatmentId       String?
+  treatment         Treatment? @relation(fields: [treatmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TreatmentReviews {
+  id          String    @id @default(cuid()) @map("_id")
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  treatmentId String
+  treatment   Treatment @relation(fields: [treatmentId], references: [id])
+  rating      Float
+  review      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Treatment {
+  id                  String               @id @default(cuid()) @map("_id")
+  name                String               @unique
+  description         String?
+  price               Float
+  estimateDuration    String?
+  treatmentCategoryId String?
+  treatmentCategory   TreatmentCategory?   @relation(fields: [treatmentCategoryId], references: [id])
+  assignedTo          UserTreatment[]
+  treatmentComponent  TreatmentComponent[]
+  treatmentVisit      TreatmentVisit[]
+  reservation         Reservation[]
+  dentalRecord        DentalRecord[]
+  treatmentReviews    TreatmentReviews[]
+  rating              Float?
+  isActive            Boolean              @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserTreatment {
+  id          String     @id @default(cuid()) @map("_id")
+  userId      String
+  User        User       @relation(fields: [userId], references: [id])
+  treatmentId String?
+  treatment   Treatment? @relation(fields: [treatmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Attachment {
+  id            String       @id @default(cuid()) @map("_id")
+  name          String
+  url           String
+  reservationId String?
+  reservation   Reservation? @relation(fields: [reservationId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model HabitQuestion {
+  id          String        @id @default(cuid()) @map("_id")
+  question    String
+  options     HabitOption[]
+  habitAnswer HabitAnswer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model HabitOption {
+  id              String        @id @default(cuid()) @map("_id")
+  option          String
+  habitQuestionId String
+  habitQuestion   HabitQuestion @relation(fields: [habitQuestionId], references: [id])
+  habitAnswer     HabitAnswer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model HabitAnswer {
+  id              String        @id @default(cuid()) @map("_id")
+  habitQuestionId String
+  habitQuestion   HabitQuestion @relation(fields: [habitQuestionId], references: [id])
+  habitOptionId   String
+  habitOption     HabitOption   @relation(fields: [habitOptionId], references: [id])
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Sickness {
+  id               String          @id @default(cuid()) @map("_id")
+  name             String
+  description      String
+  medicalCheckupId String?
+  medicalCheckup   MedicalCheckup? @relation(fields: [medicalCheckupId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Alergic {
+  id               String          @id @default(cuid()) @map("_id")
+  name             String
+  description      String
+  medicalCheckupId String?
+  medicalCheckup   MedicalCheckup? @relation(fields: [medicalCheckupId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TeethCondition {
+  id           String         @id @default(cuid()) @map("_id")
+  name         String
+  value        String
+  dentalRecord DentalRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DentalRecord {
+  id                String          @id @default(cuid()) @map("_id")
+  toothNumber       Int
+  toothName         String
+  teethConditionId  String
+  condition         TeethCondition  @relation(fields: [teethConditionId], references: [id])
+  treatmentId       String
+  treatment         Treatment       @relation(fields: [treatmentId], references: [id])
+  note              String?
+  isRecommended     Boolean         @default(false)
+  isApproved        Boolean         @default(false)
+  notApprovedReason String?
+  isDone            Boolean         @default(false)
+  notDoneReason     String?
+  medicalCheckupId  String?
+  medicalCheckup    MedicalCheckup? @relation(fields: [medicalCheckupId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OralCheckQuestion {
+  id              String            @id @default(cuid()) @map("_id")
+  question        String
+  isExplanation   Boolean           @default(false)
+  explanation     String?
+  options         OralCheckOption[]
+  oralCheckAnswer OralCheckAnswer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OralCheckOption {
+  id                  String            @id @default(cuid()) @map("_id")
+  option              String
+  oralCheckQuestionId String
+  oralCheckQuestion   OralCheckQuestion @relation(fields: [oralCheckQuestionId], references: [id])
+  oralCheckAnswer     OralCheckAnswer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OralCheckAnswer {
+  id                  String            @id @default(cuid()) @map("_id")
+  oralCheckQuestionId String
+  oralCheckQuestion   OralCheckQuestion @relation(fields: [oralCheckQuestionId], references: [id])
+  oralCheckOptionId   String
+  oralCheckOption     OralCheckOption   @relation(fields: [oralCheckOptionId], references: [id])
+  medicalCheckupId    String?
+  medicalCheckup      MedicalCheckup?   @relation(fields: [medicalCheckupId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MedicalCheckup {
+  id            String            @id @default(cuid()) @map("_id")
+  bloodPressure String
+  sicknesses    Sickness[]
+  alergics      Alergic[]
+  dentalRecords DentalRecord[]
+  oralCheck     OralCheckAnswer[]
+  isDone        Boolean           @default(false)
+  reservation   Reservation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ReservationBill {
+  id            String      @id @default(cuid()) @map("_id")
+  name          String?
+  reservationId String
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  total         Float
+  discount      Float
+  grandTotal    Float
+  paidAmount    Float
+  dueAmount     Float
+  isPaid        Boolean     @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Reservation {
+  id               String            @id @default(cuid()) @map("_id")
+  treatmentId      String
+  treatment        Treatment         @relation(fields: [treatmentId], references: [id])
+  dentistId        String
+  dentist          User              @relation(fields: [dentistId], references: [id], name: "DentistReservation")
+  dateTime         DateTime
+  quickNote        String?
+  attachments      Attachment[]
+  medicalCheckupId String?
+  medicalCheckup   MedicalCheckup?   @relation(fields: [medicalCheckupId], references: [id])
+  reservationBills ReservationBill[]
+  totalPrice       Float
+  isPaid           Boolean           @default(false)
+  status           ReservationStatus
+  rejectedReason   String?
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], name: "UserReservation")
+  salesId          String?
+  sales            Sales?            @relation(fields: [salesId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StockCategory {
+  id     String   @id @default(cuid()) @map("_id")
+  name   String
+  Stocks Stocks[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StockVendor {
+  id     String   @id @default(cuid()) @map("_id")
+  name   String
+  Stocks Stocks[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Stocks {
+  id            String        @id @default(cuid()) @map("_id")
+  name          String
+  imageUrl      String?
+  categoryId    String
+  category      StockCategory @relation(fields: [categoryId], references: [id])
+  sku           String
+  stockVendorId String?
+  vendor        StockVendor?  @relation(fields: [stockVendorId], references: [id])
+  stock         Int
+  price         Float
+  status        StockStatus
+  clinicId      String?
+  clinic        Clinic?       @relation(fields: [clinicId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PeripheralCategory {
+  id          String        @id @default(cuid()) @map("_id")
+  name        String
+  peripherals Peripherals[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PeripheralVendor {
+  id          String        @id @default(cuid()) @map("_id")
+  name        String
+  peripherals Peripherals[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PeripheralAttachment {
+  id           String      @id @default(cuid()) @map("_id")
+  name         String
+  url          String
+  peripheralId String
+  peripheral   Peripherals @relation(fields: [peripheralId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Peripherals {
+  id                   String                 @id @default(cuid()) @map("_id")
+  name                 String
+  imageUrl             String?
+  peripheralCategoryId String?
+  category             PeripheralCategory?    @relation(fields: [peripheralCategoryId], references: [id])
+  weight               Float?
+  sku                  String
+  purchaseDate         DateTime
+  purchasePrice        Float
+  peripheralVendorId   String?
+  vendor               PeripheralVendor?      @relation(fields: [peripheralVendorId], references: [id])
+  invoiceNumber        String?
+  peripheralAttachment PeripheralAttachment[]
+  status               PeripheralStatus
+  clinicId             String?
+  clinic               Clinic?                @relation(fields: [clinicId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Sales {
+  id           String        @id @default(cuid()) @map("_id")
+  date         DateTime
+  totalAmount  Float
+  reservations Reservation[]
+  clinicId     String?
+  clinic       Clinic?       @relation(fields: [clinicId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Expense {
+  id             String    @id @default(cuid()) @map("_id")
+  name           String
+  description    String?
+  amount         Float
+  date           DateTime?
+  isForEachMonth Boolean   @default(false)
+  clinicId       String?
+  clinic         Clinic?   @relation(fields: [clinicId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Clinic {
+  id          String        @id @default(cuid()) @map("_id")
+  name        String
+  address     String
+  phoneNumber String
+  city        String?
+  zipCode     String?
+  imageUrl    String?
+  stock       Stocks[]
+  peripherals Peripherals[]
+  user        User[]
+  sales       Sales[]
+  expense     Expense[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
