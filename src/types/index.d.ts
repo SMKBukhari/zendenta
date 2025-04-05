@@ -3,6 +3,9 @@ import {
   TreatmentCategory,
   TreatmentReviews,
   TreatmentVisit,
+  User,
+  UserTreatment,
+  WorkingHours,
 } from "@prisma/client";
 /* no-unused-vars */
 
@@ -20,7 +23,14 @@ declare type TreatmentWithRelations = Treatment & {
   treatmentReviews: TreatmentReviews[];
 };
 
+declare type StaffWithRelations = User & {
+  workingHours: WorkingHours[];
+  assignedTreatment: UserTreatment[];
+}
+
 declare type TreatmentsArray = TreatmentWithRelations[];
+
+declare type StaffArray = StaffWithRelations[];
 
 declare interface Treatment {
   id: string;

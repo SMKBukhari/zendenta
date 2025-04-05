@@ -146,7 +146,7 @@ const SignUpPage = () => {
                         field={field}
                         value={field.value}
                         onChange={(value) => {
-                          setFormData("role", { role: value });
+                          setFormData("role", { role: value as string });
                         }}
                       />
                     </FormControl>
@@ -224,7 +224,9 @@ const SignUpPage = () => {
                           field={field}
                           value={field.value}
                           onChange={(value) => {
-                            setFormData("userInfo", { gender: value });
+                            setFormData("userInfo", {
+                              gender: value as string,
+                            });
                           }}
                         />
                       </FormControl>

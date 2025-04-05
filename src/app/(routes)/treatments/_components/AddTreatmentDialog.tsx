@@ -53,21 +53,21 @@ const AddTreatmentDialog = ({
   const { onClose } = useDialog();
 
   const handleBack = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+    e.preventDefault(); // Stop any unintended form submission
     if (currentStep > 0) {
-      setDirection(-1);
+      setDirection(-1); // Set direction for animation
       setCurrentStep(currentStep - 1);
     }
   };
 
   const handleNext = async () => {
     const fields = getStepFields(currentStep);
-    const isValid = await form.trigger(fields as any);
+    const isValid = await form.trigger(fields as any); // Validate only the current step fields
 
-    if (!isValid) return;
+    if (!isValid) return; // Stop if validation fails
 
     if (currentStep < 2) {
-      setDirection(1);
+      setDirection(1); // Set direction for animation
       setCurrentStep(currentStep + 1);
     }
   };
@@ -581,48 +581,52 @@ const AddTreatmentDialog = ({
               </motion.div>
             </AnimatePresence>
           </div>
-
-          <div className='mt-5'>
-            <div className='flex w-full gap-30 justify-between'>
-              <div className='w-full'>
-                {currentStep > 0 && (
-                  <Button
-                    variant='outline'
-                    className='w-full'
-                    onClick={handleBack}
-                    type='button'
-                  >
-                    Previous
-                  </Button>
-                )}
-              </div>
-              <div className='w-full'>
-                {currentStep < 2 && currentStep !== 0 && (
-                  <Button
-                    variant='primary'
-                    className='w-full'
-                    onClick={handleNext}
-                    type='button'
-                  >
-                    Next
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
 
         <Dialog.Footer>
           <Button variant='outline' type='button' onClick={onClose}>
             Cancel
           </Button>
-          <Button variant='primary' type='submit' disabled={isLoading}>
-            {isLoading ? (
-              <Loader2 className='h-5 w-5 animate-spin' />
-            ) : (
-              "Add Treatment"
-            )}
-          </Button>
+          <div className='flex w-full gap-30 justify-between'>
+            <div className='w-full'>
+              {currentStep > 0 && (
+                <Button
+                  variant='outline'
+                  className='w-full'
+                  onClick={handleBack}
+                  type='button'
+                >
+                  Previous
+                </Button>
+              )}
+            </div>
+            <div className='w-full'>
+              {currentStep < 2 && currentStep !== 0 && (
+                <Button
+                  variant='primary'
+                  className='w-full'
+                  onClick={handleNext}
+                  type='button'
+                >
+                  Next
+                </Button>
+              )}
+              {currentStep === 2 && (
+                <Button
+                  variant='primary'
+                  type='submit'
+                  className='w-full'
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className='w-4 h-4 animate-spin' />
+                  ) : (
+                    "Add Treatment"
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
         </Dialog.Footer>
       </form>
     </Form>

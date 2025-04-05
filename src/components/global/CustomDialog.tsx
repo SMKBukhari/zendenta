@@ -91,7 +91,7 @@ const Dialog = ({
             >
               <div className='h-full flex flex-col'>
                 {/* Header */}
-                <div className='flex px-4 py-2 bg-brand-neutrals/5 justify-between items-center mb-6 border-b border-brand-neutrals/20'>
+                <div className='sticky flex px-4 py-2 bg-brand-neutrals/5 justify-between items-center mb-6 border-b border-brand-neutrals/20'>
                   <h2 className='text-xl font-medium text-brand-neutrals'>
                     {title}
                   </h2>
@@ -107,7 +107,7 @@ const Dialog = ({
                 </div>
 
                 {/* Main Content */}
-                <div className='flex-1 overflow-y-auto'>{children}</div>
+                <div className='flex-1'>{children}</div>
               </div>
             </motion.div>
           </>
