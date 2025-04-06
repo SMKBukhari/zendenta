@@ -4,7 +4,7 @@ import Dialog from "@/components/global/CustomDialog";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Staff from "@/icons/Staff";
-import { StaffArray } from "@/types";
+import type { AssignedServiceCategoryArray, StaffArray } from "@/types";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { columns } from "./_components/columns";
@@ -12,22 +12,37 @@ import AddStaffDialog from "./AddStaffDialog";
 
 interface AdminStaffProps {
   staff: StaffArray | null;
+  assignedServiceCategory: AssignedServiceCategoryArray | null;
 }
 
-const AdminStaff = ({ staff }: AdminStaffProps) => {
+const AdminStaff = ({ staff, assignedServiceCategory }: AdminStaffProps) => {
   const staffArray = Array.isArray(staff) ? staff : [];
   const [isOpened, setIsOpened] = useState(false);
   const isMobile = useIsMobile();
 
   const formattedStaff = staffArray.map((staff) => {
+    console.log("Staff working hours:", staff.workingHours);
+    console.log("Staff assigned treatments:", staff.assignedTreatments);
+
     return {
       id: staff.id ?? "N/A",
       staffName: staff.name ?? "N/A",
       contactNo: staff.phoneNumber ?? "N/A",
       email: staff.email ?? "N/A",
       jobType: staff.jobType ?? "N/A",
+      workingDays:
+        staff.workingHours?.map((hour) => ({
+          day: hour.weekDay || "",
+          isWorking: true,
+        })) || [],
+      assignedTreatments:
+        staff.assignedTreatments?.map((treatment) => ({
+          id: treatment.treatmentId || "N/A",
+          name: treatment.treatment.name || "N/A",
+        })) || [],
     };
   });
+
   return (
     <div>
       <div className='mt-5'>
@@ -77,7 +92,7 @@ const AdminStaff = ({ staff }: AdminStaffProps) => {
             size={isMobile ? "sm" : "md"}
             position={isMobile ? "center" : "right"}
           >
-            <AddStaffDialog />
+            <AddStaffDialog assignedServiceCategory={assignedServiceCategory} />
           </Dialog>
         </div>
       </div>

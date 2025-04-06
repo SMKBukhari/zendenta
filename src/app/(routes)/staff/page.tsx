@@ -3,11 +3,18 @@ import { DashboardSkeleton } from "@/components/global/skelton/DashboardSkelton"
 import { useSigninStore } from "@/store/useSigninStore";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { StaffArray } from "@/types";
+import {
+  AssignedServiceCategoryArray,
+  StaffArray,
+  TreatmentsArray,
+} from "@/types";
 import AdminStaff from "./_components/AdminStaff";
 
 export default function StaffPage() {
   const [staff, setStaff] = useState<StaffArray | null>(null);
+  const [services, setServices] = useState<AssignedServiceCategoryArray | null>(
+    null
+  );
   const { userId } = useSigninStore();
   const [loading, setLoading] = useState(true);
 
@@ -20,10 +27,15 @@ export default function StaffPage() {
 
       try {
         setLoading(true);
-        const getStaff = await axios.post("/api/treatments/getAllStaff", {
+        const getStaff = await axios.post("/api/staff/getAllStaff", {
           userId,
         });
+        const getAssignedServiceCategory = await axios.post(
+          "/api/assignedServiceCategory/getAllAssignedServiceCategory",
+          { userId }
+        );
         setStaff(getStaff.data);
+        setServices(getAssignedServiceCategory.data);
       } catch (error) {
         console.error("Error fetching user data:", error);
       } finally {
@@ -39,7 +51,7 @@ export default function StaffPage() {
   }
   return (
     <div>
-      <AdminStaff staff={staff} />
+      <AdminStaff staff={staff} assignedServiceCategory={services} />
     </div>
   );
 }

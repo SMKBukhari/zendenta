@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import Calendar from "@/icons/Calendar";
 import { Minus, Plus } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 export enum FormFieldType {
   INPUT = "input",
@@ -283,14 +284,14 @@ const RenderInput = <T extends FieldValues>({
             <Checkbox
               id={props.name}
               checked={field.value as boolean}
-              defaultChecked={props.defaultValue as boolean}
-              onCheckedChange={(checked) =>
-                handleChange(checked as FieldPathValue<T, FieldPath<T>>)
-              }
+              onCheckedChange={(checked) => {
+                handleChange(checked as FieldPathValue<T, FieldPath<T>>);
+              }}
+              className='checkbox'
             />
-            <label htmlFor={props.name} className='checkbox-label'>
+            <Label htmlFor={props.name} className='checkbox-label'>
               {props.label}
-            </label>
+            </Label>
           </div>
         </FormControl>
       );

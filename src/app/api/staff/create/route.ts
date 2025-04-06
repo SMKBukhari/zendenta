@@ -1,173 +1,95 @@
 import prisma from "@/lib/prisma";
+import { AddStaffFormSchema } from "@/schemas";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 export const POST = async (req: Request) => {
   try {
-    const {
-      name,
-      description,
-      price,
-      estimatedTime,
-      categoryId,
-      visits,
-      components,
-    } = await req.json();
+    const body = await req.json();
+    const validatedData = AddStaffFormSchema.parse(body);
 
-    if (!name || !categoryId || !price) {
-      return new NextResponse("Please fill the required fields.", {
-        status: 400,
-      });
-    }
+    const { staffBasicInfo, assignedServices, staffWorkingHours } =
+      validatedData;
 
-    if (visits.length === 0) {
-      return new NextResponse("Please add at least one visit.", {
-        status: 400,
-      });
-    }
-
-    // Check if category exists
-    const categoryExists = await prisma.treatmentCategory.findUnique({
-      where: { id: categoryId },
+    // Check if the user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: staffBasicInfo.email },
     });
 
-    if (!categoryExists) {
-      return new NextResponse(
-        "Invalid treatment category. Please select right one.",
-        {
-          status: 400,
-        }
-      );
+    if (existingUser) {
+      return new NextResponse("User with this email already exists", {
+        status: 400,
+      });
     }
 
-    // Check if components exist
-    if (components?.length > 0) {
-      const componentIds = components.map((c: any) => c.componentId);
-      const existingComponents = await prisma.treatmentComponents.findMany({
-        where: { id: { in: componentIds } },
+    // Create the staff member in a transaction
+    const staff = await prisma.$transaction(async (tx) => {
+      // Create the user
+      const newStaff = await tx.user.create({
+        data: {
+          name: staffBasicInfo.name,
+          email: staffBasicInfo.email,
+          phoneNumber: staffBasicInfo.phoneNumber,
+          address: staffBasicInfo.address,
+          imageUrl: staffBasicInfo.imageUrl,
+          role: "EMPLOYEE",
+          isHired: true,
+          jobType: staffBasicInfo.jobType,
+          specialist: staffBasicInfo.specialty,
+          // Set a temporary password that should be changed on first login
+          password:
+            "$2a$10$CwTycUXWue0Thq9StjUM0uQxTmrjFAe1CdKWV5RLcO.IfKT6MxOHK", // hash of 'password123'
+          isVerified: true, // Staff members are verified by default
+        },
       });
 
-      if (existingComponents.length !== componentIds.length) {
-        return new NextResponse("One or more components are invalid.", {
-          status: 400,
-        });
+      // Create working hours
+      if (staffWorkingHours && staffWorkingHours.length > 0) {
+        await Promise.all(
+          staffWorkingHours
+            .filter((wh) => wh.isWorking)
+            .map((wh) =>
+              tx.workingHours.create({
+                data: {
+                  weekDay: wh.day.toUpperCase() as any, // Convert to enum format
+                  from: wh.startTime || "09:00 am",
+                  to: wh.endTime || "05:00 pm",
+                  userId: newStaff.id,
+                },
+              })
+            )
+        );
       }
-    }
 
-    // Create the treatment
-    const treatment = await prisma.treatment.create({
-      data: {
-        name,
-        description,
-        price,
-        estimateDuration: estimatedTime,
-        treatmentCategoryId: categoryId,
-        treatmentVisit: {
-          create: visits?.map((visit: any) => ({
-            name: visit.name,
-            description: visit.description,
-            price: visit.price?.toString(),
-            estimatedDuration: visit.estimatedTime,
-          })),
-        },
-        treatmentComponent: {
-          create: components?.map((component: any) => ({
-            componentId: component.componentId,
-            quantity: component.quantity,
-          })),
-        },
-      },
-      include: {
-        treatmentVisit: true,
-        treatmentComponent: true,
-      },
+      // Assign services
+      if (assignedServices && assignedServices.length > 0) {
+        const selectedServices = assignedServices.filter(
+          (service) => service.isAssigned
+        );
+
+        if (selectedServices.length > 0) {
+          await Promise.all(
+            selectedServices.map((service) =>
+              tx.userTreatment.create({
+                data: {
+                  userId: newStaff.id,
+                  treatmentId: service.id,
+                },
+              })
+            )
+          );
+        }
+      }
+
+      return newStaff;
     });
 
-    // Calculate average price from visits if needed
-    if (visits?.length > 0) {
-      const totalVisitPrice = visits.reduce((sum: number, visit: any) => {
-        return sum + parseFloat(visit.price || "0");
-      }, 0);
-
-      await prisma.treatment.update({
-        where: { id: treatment.id },
-        data: { price: totalVisitPrice },
-      });
-    }
-
-    return NextResponse.json(treatment, { status: 201 });
-
-    // // Create the treatment with its relations in a transaction
-    // const treatment = await prisma.$transaction(async (prisma) => {
-    //   // Create the main treatment
-    //   const newTreatment = await prisma.treatment.create({
-    //     data: {
-    //       name,
-    //       description,
-    //       price,
-    //       estimateDuration: estimatedTime,
-    //       treatmentCategoryId: categoryId,
-    //     },
-    //   });
-
-    //   // Create visits if provided
-    //   if (visits && visits.length > 0) {
-    //     await prisma.treatmentVisit.createMany({
-    //       data: visits.map((visit: any) => ({
-    //         name: visit.name,
-    //         description: visit.description,
-    //         price: visit.price?.toString() || "0",
-    //         estimatedDuration: visit.estimatedTime,
-    //         treatment: {
-    //           connect: {
-    //             id: newTreatment.id,
-    //           },
-    //         },
-    //       })),
-    //     });
-    //   }
-
-    //   // Create components if provided
-    //   if (components && components.length > 0) {
-    //     await prisma.treatmentComponent.createMany({
-    //       data: components.map((component: any) => ({
-    //         componentId: component.componentId,
-    //         quantity: component.quantity || 1,
-    //         treatment: {
-    //           connect: {
-    //             id: newTreatment.id,
-    //           },
-    //         },
-    //       })),
-    //     });
-    //   }
-
-    //   // Return the treatment with its relations
-    //   return await prisma.treatment.findUnique({
-    //     where: { id: newTreatment.id },
-    //     include: {
-    //       treatmentVisit: true,
-    //       treatmentComponent: {
-    //         include: {
-    //           component: true,
-    //         },
-    //       },
-    //       treatmentCategory: true,
-    //     },
-    //   });
-    // });
-
-    // return NextResponse.json(
-    //   {
-    //     treatment,
-    //     message: "Treatment added successfully",
-    //   },
-    //   {
-    //     status: 201,
-    //   }
-    // );
+    return NextResponse.json(
+      { staff, message: "Staff member added successfully" },
+      { status: 201 }
+    );
   } catch (error) {
-    console.error(`POST_TREATMENTS_ERROR: ${error}`);
+    console.error(`POST_CREATE_STAFF_ERROR: ${error}`);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 };

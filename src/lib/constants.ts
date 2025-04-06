@@ -21,6 +21,40 @@ export const FreeOptions = [
   { value: "freeUpTo", label: "Free up to" },
 ];
 
+export const SpecialtyOptions = [
+  {
+    value: "Pediatric Dentistry",
+    label: "Pediatric Dentistry",
+  },
+  { value: "Orthodontics", label: "Orthodontics" },
+  { value: "Periodontics", label: "Periodontics" },
+  { value: "Endodontics", label: "Endodontics" },
+  { value: "Oral Surgery", label: "Oral Surgery" },
+  { value: "Prosthodontics", label: "Prosthodontics" },
+  { value: "General Dentistry", label: "General Dentistry" },
+];
+
+export const JobType = {
+  FULL_TIME: "FULL_TIME",
+  PART_TIME: "PART_TIME",
+} as const;
+
+export const JobTypeOption = [
+  { value: JobType.FULL_TIME, label: "Full Time" },
+  { value: JobType.PART_TIME, label: "Part Time" },
+];
+
+// Working days enum
+export const WeekDays = {
+  MONDAY: "Monday",
+  TUESDAY: "Tuesday",
+  WEDNESDAY: "Wednesday",
+  THURSDAY: "Thursday",
+  FRIDAY: "Friday",
+  SATURDAY: "Saturday",
+  SUNDAY: "Sunday",
+} as const;
+
 export const Gender = ["MALE", "FEMALE", "OTHER"];
 
 export const EstimatedTime = [

@@ -25,12 +25,21 @@ declare type TreatmentWithRelations = Treatment & {
 
 declare type StaffWithRelations = User & {
   workingHours: WorkingHours[];
-  assignedTreatment: UserTreatment[];
-}
+  assignedTreatments: (UserTreatment & {
+    treatment: Treatment;
+  })[];
+};
+
+declare type AssignedServiceCategoryWithRelations = TreatmentCategory & {
+  treatments: Treatment[];
+};
 
 declare type TreatmentsArray = TreatmentWithRelations[];
 
 declare type StaffArray = StaffWithRelations[];
+
+declare type AssignedServiceCategoryArray =
+  AssignedServiceCategoryWithRelations[];
 
 declare interface Treatment {
   id: string;

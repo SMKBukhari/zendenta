@@ -445,7 +445,7 @@ html {
   }
 
   .shad-input {
-    @apply placeholder:text-brand-neutrals/60! text-brand-neutrals! h-11! ring-offset-0! ring-0! focus-visible:ring-0! focus-visible:ring-offset-0! border-0! shadow-none! transition-all;
+    @apply placeholder:text-brand-neutrals/60! text-brand-neutrals! h-11! ring-offset-0! ring-0! focus-visible:ring-0! focus-visible:ring-offset-0! border-0! shadow-none! transition-all font-medium!;
   }
 
   .shad-input-icon {
@@ -453,7 +453,7 @@ html {
   }
 
   .shad-textArea {
-    @apply placeholder:text-brand-neutrals/60! text-brand-neutrals! h-11! ring-offset-0! ring-0! focus-visible:ring-0! focus-visible:ring-offset-0! border-0! shadow-none! transition-all;
+    @apply placeholder:text-brand-neutrals/60! text-brand-neutrals! h-11! ring-offset-0! ring-0! focus-visible:ring-0! focus-visible:ring-offset-0! border-0! shadow-none! transition-all font-medium!;
   }
 
   .shad-combobox-item {
@@ -465,7 +465,7 @@ html {
   }
 
   .shad-select-trigger {
-    @apply bg-transparent! placeholder:text-brand-neutrals/60! ring-offset-0! ring-0! focus-visible:ring-0! focus-visible:ring-offset-0! border-0! shadow-none! transition-all text-sm! data-[size=default]:h-10!;
+    @apply bg-transparent! text-brand-neutrals! placeholder:text-brand-neutrals/60! ring-offset-0! ring-0! focus-visible:ring-0! focus-visible:ring-offset-0! border-0! shadow-none! transition-all text-sm! data-[size=default]:h-10! font-medium!;
   }
 
   .shad-select-content {
@@ -514,7 +514,7 @@ html {
 
   /* =====  REACT PHONE NUMBER INPUT OVERRIDES */
   .input-phone {
-    @apply mt-2! h-11! rounded-md! px-3! text-sm border-2! border-brand-neutrals/30! focus-within:border-brand-primary-blue! placeholder:text-primary-purple-100/25!;
+    @apply mt-2! h-11! rounded-md! px-3! text-sm border-2! border-brand-neutrals/30! focus-within:border-brand-primary-blue! placeholder:text-primary-purple-100/25! text-brand-neutrals!;
   }
 
   /* =====  REACT DATE PICKER OVERRIDES */

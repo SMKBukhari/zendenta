@@ -10,7 +10,11 @@ export const POST = async (req: Request) => {
       },
       include: {
         workingHours: true,
-        assignedTreatments: true,
+        assignedTreatments: {
+          include: {
+            treatment: true,
+          },
+        },
       },
     });
 
