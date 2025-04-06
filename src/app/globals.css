@@ -169,6 +169,22 @@ html {
   }
 }
 
+/* Add this to your existing CSS file */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* For drag and drop */
+.react-draggable-transparent-selection * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
 /* For drag and drop */
 .react-draggable-transparent-selection *::-moz-selection {
   background: transparent;
@@ -445,7 +461,7 @@ html {
   }
 
   .shad-input {
-    @apply placeholder:text-brand-neutrals/60! text-brand-neutrals! h-11! ring-offset-0! ring-0! focus-visible:ring-0! focus-visible:ring-offset-0! border-0! shadow-none! transition-all font-medium!;
+    @apply placeholder:text-brand-neutrals/60! text-brand-neutrals! h-11! ring-offset-0! ring-0! focus-visible:ring-0! focus-visible:ring-offset-0! border-0! shadow-none! transition-all;
   }
 
   .shad-input-icon {
@@ -453,7 +469,7 @@ html {
   }
 
   .shad-textArea {
-    @apply placeholder:text-brand-neutrals/60! text-brand-neutrals! h-11! ring-offset-0! ring-0! focus-visible:ring-0! focus-visible:ring-offset-0! border-0! shadow-none! transition-all font-medium!;
+    @apply placeholder:text-brand-neutrals/60! text-brand-neutrals! h-11! ring-offset-0! ring-0! focus-visible:ring-0! focus-visible:ring-offset-0! border-0! shadow-none! transition-all;
   }
 
   .shad-combobox-item {
@@ -465,7 +481,7 @@ html {
   }
 
   .shad-select-trigger {
-    @apply bg-transparent! text-brand-neutrals! placeholder:text-brand-neutrals/60! ring-offset-0! ring-0! focus-visible:ring-0! focus-visible:ring-offset-0! border-0! shadow-none! transition-all text-sm! data-[size=default]:h-10! font-medium!;
+    @apply bg-transparent! placeholder:text-brand-neutrals/60! ring-offset-0! ring-0! focus-visible:ring-0! focus-visible:ring-offset-0! border-0! shadow-none! transition-all text-sm! data-[size=default]:h-10!;
   }
 
   .shad-select-content {
@@ -514,7 +530,7 @@ html {
 
   /* =====  REACT PHONE NUMBER INPUT OVERRIDES */
   .input-phone {
-    @apply mt-2! h-11! rounded-md! px-3! text-sm border-2! border-brand-neutrals/30! focus-within:border-brand-primary-blue! placeholder:text-primary-purple-100/25! text-brand-neutrals!;
+    @apply mt-2! h-11! rounded-md! px-3! text-sm border-2! border-brand-neutrals/30! focus-within:border-brand-primary-blue! placeholder:text-primary-purple-100/25!;
   }
 
   /* =====  REACT DATE PICKER OVERRIDES */
@@ -604,3 +620,4 @@ html {
 .shadow-user {
   box-shadow: 0px 1px 2px 0px rgba(24, 35, 34, 0.05);
 }
+

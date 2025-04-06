@@ -71,3 +71,42 @@ declare interface Visit {
   componentsUsed?: boolean;
   day?: number;
 }
+
+declare interface Dentist {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+  specialty: string | null;
+  jobType: string | null;
+  appointmentCount: number;
+}
+
+declare type ReservationStatus =
+  | "FINISHED"
+  | "DOING_TREATMENT"
+  | "REGISTERED"
+  | "WAITING_PAYMENT";
+
+declare interface Reservation {
+  id: string;
+  patientName: string;
+  patientId: string;
+  dentistId: string;
+  dentistName: string;
+  treatmentId: string;
+  treatmentName: string;
+  date: string;
+  time: string;
+  status: ReservationStatus;
+  quickNote?: string;
+}
+
+declare interface DraggedReservation {
+  id: string;
+  dentistId: string;
+  timeSlot: string;
+  patientName: string;
+  treatmentName: string;
+  status: ReservationStatus;
+  time: string;
+}

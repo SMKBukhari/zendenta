@@ -132,6 +132,54 @@ export const AddComponentFormSchema = z.object({
     }),
 });
 
+// Step 1: Treatment & Dentist Info
+export const ReservationTreatmentInfoSchema = z.object({
+  treatmentId: z.string().min(1, "Treatment is required"),
+  dentistId: z.string().min(1, "Dentist is required"),
+  date: z.date(),
+  startTime: z.string().min(1, "Start time is required"),
+  endTime: z.string().min(1, "End time is required"),
+  quickNote: z.string().optional(),
+});
+
+// Step 2: Patient Basic Information
+export const ReservationPatientInfoSchema = z.object({
+  patientName: z.string().min(2, "Name is required"),
+  age: z.string().min(1, "Age is required"),
+  gender: z.enum(["Male", "Female"]),
+  email: z.string().email("Invalid email address"),
+  phoneNumber: z.string().min(10, "Phone number is required"),
+  address: z.string().min(5, "Address is required"),
+});
+
+// Step 3: Oral Hygiene Habits
+export const ReservationOralHygieneSchema = z.object({
+  lastVisit: z.string(),
+  dentalCareStart: z.string(),
+  brushingFrequency: z.string(),
+  usesMouthwash: z.string(),
+  usesDentalFloss: z.string(),
+});
+
+// Complete reservation form schema
+export const AddReservationFormSchema = z.object({
+  treatmentInfo: ReservationTreatmentInfoSchema,
+  patientInfo: ReservationPatientInfoSchema,
+  oralHygieneInfo: ReservationOralHygieneSchema,
+});
+
+// Export types for use in other files
+export type ReservationTreatmentInfo = z.infer<
+  typeof ReservationTreatmentInfoSchema
+>;
+export type ReservationPatientInfo = z.infer<
+  typeof ReservationPatientInfoSchema
+>;
+export type ReservationOralHygieneInfo = z.infer<
+  typeof ReservationOralHygieneSchema
+>;
+export type AddReservationForm = z.infer<typeof AddReservationFormSchema>;
+
 export type StaffBasicInfo = z.infer<typeof StaffBasicInfoSchema>;
 export type WorkingHours = z.infer<typeof StaffWorkingHoursSchema>;
 export type AssignedService = z.infer<typeof AssignedServiceSchema>;

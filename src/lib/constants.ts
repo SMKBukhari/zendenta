@@ -57,6 +57,11 @@ export const WeekDays = {
 
 export const Gender = ["MALE", "FEMALE", "OTHER"];
 
+export const GenderOptions = [
+  { value: "Male", name: "Male" },
+  { value: "Female", name: "Female" },
+];
+
 export const EstimatedTime = [
   { value: "15 minutes", label: "15 minutes" },
   { value: "30 minutes", label: "30 minutes" },

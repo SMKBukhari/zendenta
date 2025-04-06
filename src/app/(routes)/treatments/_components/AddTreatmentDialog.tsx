@@ -193,7 +193,7 @@ const AddTreatmentDialog = ({
   const onSubmit = async (data: z.infer<typeof AddTreatmentFormSchema>) => {
     try {
       setIsLoading(true);
-      const response = await axios.post("/api/treatments/create", {
+      await axios.post("/api/treatments/create", {
         name: data.treatmentBasicInfo.treatmentName,
         description: data.treatmentBasicInfo.treatmentDescription,
         price: data.treatmentPriceInfo.price,
