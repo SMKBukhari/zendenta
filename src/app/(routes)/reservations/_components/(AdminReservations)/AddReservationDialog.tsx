@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import Image from "next/image";
 import { Dentist } from "@/types";
-import { Treatment } from "@prisma/client";
+import { Treatment, User } from "@prisma/client";
 import { useReservationStore } from "@/store/useAddReservationStore";
 import { AddReservationFormSchema } from "@/schemas";
 import axios from "axios";
@@ -43,34 +43,6 @@ interface RadioOptionProps {
   register: any; // This should be from react-hook-form's UseFormRegister
 }
 
-// Define the schema for the form
-const reservationSchema = z.object({
-  // Step 1: Treatment & Dentist
-  treatment: z.string().min(1, "Treatment is required"),
-  dentistId: z.string().min(1, "Dentist is required"),
-  date: z.date(),
-  startTime: z.string().min(1, "Start time is required"),
-  endTime: z.string().min(1, "End time is required"),
-  quickNote: z.string().optional(),
-
-  // Step 2: Basic Information
-  patientName: z.string().min(2, "Name is required"),
-  age: z.string().min(1, "Age is required"),
-  gender: z.enum(["Male", "Female"]),
-  email: z.string().email("Invalid email address"),
-  phoneNumber: z.string().min(10, "Phone number is required"),
-  address: z.string().min(5, "Address is required"),
-
-  // Step 3: Oral Hygiene Habits
-  lastVisit: z.string(),
-  dentalCareStart: z.string(),
-  brushingFrequency: z.string(),
-  usesMouthwash: z.string(),
-  usesDentalFloss: z.string(),
-});
-
-type ReservationFormValues = z.infer<typeof reservationSchema>;
-
 interface AddReservationDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -93,11 +65,38 @@ const AddReservationDialog = ({
   getAllTreatments,
 }: AddReservationDialogProps) => {
   const [step, setStep] = useState(1);
+  const [patientSuggestions, setPatientSuggestions] = useState<User[]>([]);
+  const [isLoadingPatients, setIsLoadingPatients] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const { currentStep, setCurrentStep, formData, setFormData, reset } =
     useReservationStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [direction, setDirection] = useState(0); // 1 for forward, -1 for backward
+
+  const fetchPatientSuggestions = async (query: string) => {
+    if (query.length < 2) {
+      setPatientSuggestions([]);
+      return;
+    }
+
+    try {
+      setIsLoadingPatients(true);
+      const response = await fetch(
+        `/api/patients/search?query=${encodeURIComponent(query)}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch patient suggestions");
+      }
+      const data = await response.json();
+      setPatientSuggestions(data);
+    } catch (error) {
+      console.error("Error fetching patient suggestions:", error);
+      toast.error("Failed to fetch patient suggestions");
+    } finally {
+      setIsLoadingPatients(false);
+    }
+  };
 
   // Calculate end time (1 hour after start)
   const getEndTime = (time: string) => {
@@ -236,11 +235,22 @@ const AddReservationDialog = ({
 
       console.log("Formatted data:", formattedData);
 
+      if (!treatments.some((t) => t.id === formattedData.treatmentId)) {
+        toast.error("Selected treatment is invalid");
+        return;
+      }
+
+      if (!dentists.some((d) => d.id === formattedData.dentistId)) {
+        toast.error("Selected dentist is invalid");
+        return;
+      }
+
       // Send the data to the API
 
-      const response = await axios.post("/api/reservations/create", {
-        data: formattedData,
-      });
+      const response = await axios.post(
+        "/api/reservations/create",
+        formattedData
+      );
 
       // TODO: Handle the response, it giving error that missing required fields even all fields are provided but it not working
 
@@ -258,6 +268,10 @@ const AddReservationDialog = ({
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    console.log("Current form values:", form.getValues());
+  }, [form]);
 
   // // Get the selected dentist
   // const selectedDentist = dentists.find(
@@ -451,29 +465,105 @@ const AddReservationDialog = ({
                 control={form.control}
                 name='patientInfo.patientName'
                 label='Patient Name'
-                placeholder='Enter patient name'
+                placeholder='Start typing patient name...'
                 onChange={(value) => {
                   setFormData("patientInfo", {
                     patientName: value as string,
                   });
+                  fetchPatientSuggestions(value as string);
                 }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               />
+              <AnimatePresence>
+                {showSuggestions && patientSuggestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className='absolute z-50 mt-1 w-full rounded-md border border-brand-neutrals/20 bg-white shadow-lg'
+                  >
+                    <div className='max-h-60 overflow-y-auto'>
+                      {patientSuggestions.map((patient) => (
+                        <motion.div
+                          key={patient.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.1 }}
+                          className='cursor-pointer px-4 py-3 hover:bg-brand-light-blue/10'
+                          onClick={() => {
+                            const age = patient.birthDate
+                              ? (
+                                  new Date().getFullYear() -
+                                  new Date(patient.birthDate).getFullYear()
+                                ).toString()
+                              : "";
 
-              <div className='grid grid-cols-2'>
-                {/* <CustomFormField<z.infer<typeof AddReservationFormSchema>>
-                  fieldType={FormFieldType.NUMBER_INPUT}
-                  control={form.control}
-                  name={`patientInfo.age`}
-                  label='Age'
-                  placeholder='Enter age'
-                  defaultValue={"18"}
-                  onChange={(value) => {
-                    setFormData("patientInfo", {
-                      age: value as string,
-                    });
-                  }}
-                /> */}
+                            const gender =
+                              patient.gender === "MALE" ? "MALE" : "FEMALE";
 
+                            // Update form data
+                            setFormData("patientInfo", {
+                              patientName: patient.name,
+                              email: patient.email,
+                              phoneNumber: patient.phoneNumber,
+                              address: patient.address || "",
+                              gender: gender,
+                              age: age,
+                            });
+
+                            // Update form values - make sure gender is set properly
+                            form.setValue(
+                              "patientInfo.patientName",
+                              patient.name
+                            );
+                            form.setValue("patientInfo.email", patient.email);
+                            form.setValue(
+                              "patientInfo.phoneNumber",
+                              patient.phoneNumber
+                            );
+                            form.setValue(
+                              "patientInfo.address",
+                              patient.address || ""
+                            );
+                            form.setValue("patientInfo.gender", gender); // This should match one of your option values
+                            form.setValue("patientInfo.age", age);
+
+                            setPatientSuggestions([]);
+                          }}
+                        >
+                          <div className='flex items-center gap-3'>
+                            <div className='w-8 h-8 rounded-full bg-brand-light-blue/20 flex items-center justify-center'>
+                              {patient.imageUrl ? (
+                                <Image
+                                  width={32}
+                                  height={32}
+                                  src={patient.imageUrl}
+                                  alt={patient.name}
+                                  className='w-8 h-8 rounded-full object-cover'
+                                />
+                              ) : (
+                                <span className='text-brand-primary-blue text-sm font-medium'>
+                                  {patient.name.charAt(0)}
+                                </span>
+                              )}
+                            </div>
+                            <div>
+                              <div className='font-medium'>{patient.name}</div>
+                              <div className='text-xs text-brand-neutrals/70'>
+                                {patient.email} • {patient.phoneNumber}
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className='grid gap-2 grid-cols-2'>
                 <CustomFormField<z.infer<typeof AddReservationFormSchema>>
                   fieldType={FormFieldType.INPUT}
                   control={form.control}
@@ -497,7 +587,7 @@ const AddReservationDialog = ({
                       <FormControl>
                         <RadioButtonGroup
                           className='w-full'
-                          name='treatmentBasicInfo.treatmentCategoryId'
+                          name='patientInfo.gender'
                           options={
                             GenderOptions?.map((gender) => ({
                               label: gender.name,
@@ -505,11 +595,12 @@ const AddReservationDialog = ({
                             })) || []
                           }
                           field={field}
-                          value={field.value}
+                          value={field.value} // Make sure this is passed correctly
                           onChange={(value) => {
                             setFormData("patientInfo", {
-                              gender: value || "MALE" || "FEMALE",
+                              gender: value as "MALE" | "FEMALE",
                             });
+                            field.onChange(value); // This is crucial to update react-hook-form's state
                           }}
                         />
                       </FormControl>

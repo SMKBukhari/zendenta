@@ -17,9 +17,20 @@ export async function POST(req: Request) {
       oralHygieneHabits,
     } = body;
 
-    // Validate required fields
-    if (!treatmentId || !dentistId || !patientName || !date || !startTime) {
-      return new NextResponse("Missing required fields", { status: 400 });
+    const requiredFields = [
+      "treatmentId",
+      "dentistId",
+      "patientName",
+      "date",
+      "startTime",
+    ];
+    const missingFields = requiredFields.filter((field) => !body[field]);
+
+    if (missingFields.length > 0) {
+      return new NextResponse(
+        `Missing required fields: ${missingFields.join(", ")}`,
+        { status: 400 }
+      );
     }
 
     // Check if patient exists

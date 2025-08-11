@@ -146,7 +146,7 @@ export const ReservationTreatmentInfoSchema = z.object({
 export const ReservationPatientInfoSchema = z.object({
   patientName: z.string().min(2, "Name is required"),
   age: z.string().min(1, "Age is required"),
-  gender: z.enum(["Male", "Female"]),
+  gender: z.enum(["MALE", "FEMALE"]),
   email: z.string().email("Invalid email address"),
   phoneNumber: z.string().min(10, "Phone number is required"),
   address: z.string().min(5, "Address is required"),

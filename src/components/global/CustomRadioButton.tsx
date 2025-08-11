@@ -73,11 +73,11 @@ export default function RadioButtonGroup({
     <FormItem className={`space-y-3 ${className}`}>
       {label && <FormLabel>{label}</FormLabel>}
       <FormControl>
-        <div className='flex space-x-4'>
+        <div className='flex space-x-1 h-11'>
           {normalizedOptions.map((option) => (
             <Label
               key={option.value}
-              className={`cursor-pointer ${className} flex items-center px-4 py-2 rounded-lg border transition-all ${
+              className={`cursor-pointer ${className} flex items-center px-3 py-2 rounded-xl border transition-all ${
                 selected === option.value
                   ? "border-brand-primary-blue bg-white"
                   : "border-brand-neutrals/30 text-brand-neutrals bg-white"
@@ -96,7 +96,7 @@ export default function RadioButtonGroup({
                 className='hidden'
               />
               <div
-                className={`w-5 h-5 border-2 rounded-full flex items-center justify-center mr-2 transition-all ${
+                className={`w-5 h-5 border-2 rounded-full flex items-center justify-center mr-0 transition-all ${
                   selected === option.value
                     ? "bg-brand-primary-blue border-brand-primary-blue"
                     : "border-gray-400"

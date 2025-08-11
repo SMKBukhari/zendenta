@@ -60,9 +60,12 @@ interface CustomFormFieldProps<T extends FieldValues> {
   showTimeSelect?: boolean;
   children?: React.ReactNode;
   renderSkelton?: (field: any) => React.ReactNode;
+  renderCustomInput?: (field: any) => React.ReactNode; // Add this
   fieldType?: FormFieldType;
   isForgotPassword?: boolean;
   onChange?: (value: FieldPathValue<T, FieldPath<T>>) => void;
+  onFocus?: () => void; // Add this
+  onBlur?: () => void; // Add this
   options?: { value: string; label: string }[];
   className?: string;
   defaultValue?: FieldPathValue<T, FieldPath<T>>;
@@ -86,13 +89,16 @@ const RenderInput = <T extends FieldValues>({
   const focusedColor = "#415be7";
   const defaultColor = "#515D6B";
 
-  const handleFocus = () => setIsFocused(true);
+  const handleFocus = () => {
+    setIsFocused(true);
+    if (props.onFocus) props.onFocus();
+  };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     setIsFocused(false);
     field.onBlur();
+    if (props.onBlur) props.onBlur();
   };
-
   const handleTextareaBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
     setIsFocused(false);
     field.onBlur();
@@ -111,6 +117,10 @@ const RenderInput = <T extends FieldValues>({
       color: isFocused ? focusedColor : defaultColor,
     });
   };
+
+  if (props.renderCustomInput) {
+    return props.renderCustomInput(field);
+  }
 
   switch (props.fieldType) {
     case FormFieldType.INPUT:
