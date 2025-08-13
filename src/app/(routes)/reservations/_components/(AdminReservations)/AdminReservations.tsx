@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import CalendarCheckIcon from "@/icons/CalendarCheck";
 import axios from "axios";
-import { Dentist, Reservation } from "@/types";
+import { Dentist, Reservation, ReservationWithRelations } from "@/types";
+import ReservationDetailsDialog from "./ReservationDetailsDialog";
 
 type Props = {
   user: User | null;
@@ -23,6 +24,9 @@ const AdminReservations = ({ user, treatments }: Props) => {
   const [dentists, setDentists] = useState<Dentist[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedReservation, setSelectedReservation] =
+    useState<Reservation | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<
     string | undefined
   >();
@@ -95,6 +99,14 @@ const AdminReservations = ({ user, treatments }: Props) => {
     }
   };
 
+  const fetchReservations = async () => {
+    const formattedDate = format(selectedDate, "yyyy-MM-dd");
+    const response = await axios.get("/api/reservations/getByDate", {
+      params: { date: formattedDate },
+    });
+    setReservations(response.data);
+  };
+
   const handleDeleteReservation = async (id: string) => {
     try {
       await axios.delete("/api/reservations/delete", {
@@ -140,6 +152,32 @@ const AdminReservations = ({ user, treatments }: Props) => {
       toast.error("Failed to update reservation");
       return false;
     }
+  };
+
+  const handleReservationClick = (reservation: Reservation) => {
+    // Create a compatible object with required fields
+    const formattedReservation: ReservationWithRelations = {
+      ...reservation,
+      dateTime: new Date(`${reservation.date}T${reservation.time}`),
+      treatment: {
+        id: reservation.treatmentId,
+        name: reservation.treatmentName || "Unknown Treatment",
+      } as Treatment,
+      dentist: {
+        id: reservation.dentistId,
+        name: reservation.dentistName || "Unknown Dentist",
+      } as User,
+      user: {
+        id: reservation.patientId,
+        name: reservation.patientName || "Unknown Patient",
+      } as User,
+      medicalCheckup: null,
+    };
+
+    console.log("Selected Reservation:", formattedReservation);
+
+    setSelectedReservation(formattedReservation);
+    setIsDetailsOpen(true);
   };
 
   const totalAppointments = reservations.length;
@@ -218,6 +256,7 @@ const AdminReservations = ({ user, treatments }: Props) => {
           onAddReservation={handleAddReservation}
           onDeleteReservation={handleDeleteReservation}
           onUpdateReservation={handleUpdateReservation}
+          onReservationClick={handleReservationClick}
         />
       </div>
 
@@ -231,8 +270,19 @@ const AdminReservations = ({ user, treatments }: Props) => {
         selectedDentistId={selectedDentistId}
         dentists={dentists}
         getAllTreatments={treatments}
-        
       />
+
+      {selectedReservation && (
+        <ReservationDetailsDialog
+          isOpen={isDetailsOpen}
+          onClose={() => setIsDetailsOpen(false)}
+          reservation={selectedReservation}
+          onMedicalCheckupComplete={() => {
+            // Refresh reservations after medical checkup
+            fetchReservations();
+          }}
+        />
+      )}
     </div>
   );
 };

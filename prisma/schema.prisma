@@ -23,6 +23,12 @@ enum JobType {
   PART_TIME
 }
 
+enum PatientStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
 enum WeekDay {
   MONDAY
   TUESDAY
@@ -44,6 +50,8 @@ enum ReservationStatus {
   PENDING
   DONE
   REJECTED
+  DOING_TREATMENT
+  FINISHED
 }
 
 enum StockStatus {
@@ -58,39 +66,42 @@ enum PeripheralStatus {
 }
 
 model User {
-  id                  String             @id @default(cuid()) @map("_id")
-  email               String             @unique
-  password            String?
-  name                String
-  phoneNumber         String
-  gender              Gender?
-  birthDate           DateTime?
-  address             String?
-  city                String?
-  zipCode             String?
-  imageUrl            String?
-  jobType             JobType?
-  specialist          String?
-  designation         String?
-  role                Role               @default(PATIENT)
-  otpCode             String?
-  otpCodeExpiry       DateTime?
-  resetToken          String?
-  resetTokenExpiry    DateTime?
-  loginSessionToken   String?
-  loginSessionExpiry  DateTime?
-  isVerified          Boolean            @default(false)
-  isHired             Boolean            @default(false)
-  sessions            Session[]
-  accounts            Account[]
-  workingHours        WorkingHours[]
-  assignedTreatments  UserTreatment[]
-  treatmentReviews    TreatmentReviews[]
-  userReservations    Reservation[]      @relation(name: "UserReservation")
-  dentistReservations Reservation[]      @relation(name: "DentistReservation")
-  habitAnswer         HabitAnswer[]
-  clinicId            String?
-  clinic              Clinic?            @relation(fields: [clinicId], references: [id])
+  id                    String             @id @default(cuid()) @map("_id")
+  email                 String             @unique
+  password              String?
+  name                  String
+  phoneNumber           String
+  gender                Gender?
+  birthDate             DateTime?
+  address               String?
+  city                  String?
+  zipCode               String?
+  imageUrl              String?
+  jobType               JobType?
+  specialist            String?
+  designation           String?
+  role                  Role               @default(PATIENT)
+  otpCode               String?
+  otpCodeExpiry         DateTime?
+  resetToken            String?
+  resetTokenExpiry      DateTime?
+  loginSessionToken     String?
+  loginSessionExpiry    DateTime?
+  isVerified            Boolean            @default(false)
+  isHired               Boolean            @default(false)
+  sessions              Session[]
+  accounts              Account[]
+  workingHours          WorkingHours[]
+  assignedTreatments    UserTreatment[]
+  treatmentReviews      TreatmentReviews[]
+  userReservations      Reservation[]      @relation(name: "UserReservation")
+  dentistReservations   Reservation[]      @relation(name: "DentistReservation")
+  habitAnswer           HabitAnswer[]
+  clinicId              String?
+  clinic                Clinic?            @relation(fields: [clinicId], references: [id])
+  patientRecord         PatientRecord?     @relation(name: "PatientRecordUser")
+  primaryDentistFor     PatientRecord[]    @relation(name: "PrimaryDentist")
+  createdPatientRecords PatientRecord[]    @relation(name: "CreatedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -137,6 +148,38 @@ model WorkingHours {
   to      String
   user    User    @relation(fields: [userId], references: [id])
   userId  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PatientRecord {
+  id               String           @id @default(cuid()) @map("_id")
+  userId           String           @unique
+  user             User             @relation(fields: [userId], references: [id], name: "PatientRecordUser")
+  status           PatientStatus    @default(ACTIVE)
+  primaryDentistId String?
+  primaryDentist   User?            @relation(fields: [primaryDentistId], references: [id], name: "PrimaryDentist")
+  createdById      String
+  createdBy        User             @relation(fields: [createdById], references: [id], name: "CreatedBy")
+  medicalHistory   MedicalHistory[]
+  dentalRecords    DentalRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([primaryDentistId])
+  @@index([createdById])
+}
+
+model MedicalHistory {
+  id              String        @id @default(cuid()) @map("_id")
+  condition       String
+  diagnosisDate   DateTime?
+  treatment       String?
+  notes           String?
+  patientRecordId String
+  patientRecord   PatientRecord @relation(fields: [patientRecordId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -325,8 +368,10 @@ model DentalRecord {
   medicalCheckupId  String?
   medicalCheckup    MedicalCheckup? @relation(fields: [medicalCheckupId], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  PatientRecord   PatientRecord? @relation(fields: [patientRecordId], references: [id])
+  patientRecordId String?
 }
 
 model OralCheckQuestion {

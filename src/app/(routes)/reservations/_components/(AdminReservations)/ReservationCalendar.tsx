@@ -50,6 +50,7 @@ interface ReservationProps {
   onHover: () => void;
   onLeave: () => void;
   onDelete: () => void;
+  onClick: () => void;
   setDraggedReservation: (reservation: DraggedReservation | null) => void;
 }
 
@@ -84,6 +85,7 @@ interface ReservationCalendarProps {
     dentistId: string,
     timeSlot: string
   ) => Promise<boolean>;
+  onReservationClick: (reservation: ReservationType) => void;
 }
 
 const ReservationCalendar = ({
@@ -94,6 +96,7 @@ const ReservationCalendar = ({
   onAddReservation,
   onDeleteReservation,
   onUpdateReservation,
+  onReservationClick,
 }: ReservationCalendarProps) => {
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
   const [hoveredReservation, setHoveredReservation] = useState<string | null>(
@@ -234,6 +237,7 @@ const ReservationCalendar = ({
                       onLeave={() => setHoveredReservation(null)}
                       onDelete={() => confirmDelete(reservation.id)}
                       setDraggedReservation={setDraggedReservation}
+                      onClick={() => onReservationClick(reservation)}
                     />
                   ))}
                 </Cell>
@@ -277,6 +281,7 @@ const Reservation = ({
   onHover,
   onLeave,
   onDelete,
+  onClick,
   setDraggedReservation,
 }: ReservationProps) => {
   const ref = useRef(null);
@@ -396,6 +401,7 @@ const Reservation = ({
       )} ${isDragging ? "opacity-50" : "opacity-100"}`}
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
+      onClick={onClick}
     >
       <div className='flex items-center gap-2 mb-1'>
         <div

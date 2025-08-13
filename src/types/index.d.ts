@@ -11,6 +11,7 @@ import {
 
 declare type Gender = "Male" | "Female" | "Other";
 declare type Status = "pending" | "scheduled" | "cancelled";
+declare type PatientStatus = "ACTIVE" | "INACTIVE" | "PENDING";
 
 declare type RouteItems = {
   group: string;
@@ -30,6 +31,14 @@ declare type StaffWithRelations = User & {
   })[];
 };
 
+declare interface PatientWithRelations extends User {
+  patientRecord: PatientRecord | null;
+  medicalHistory: MedicalHistory[];
+  dentalRecords: DentalRecord[];
+  primaryDentist: User | null;
+  createdBy: User;
+}
+
 declare type AssignedServiceCategoryWithRelations = TreatmentCategory & {
   treatments: Treatment[];
 };
@@ -37,6 +46,8 @@ declare type AssignedServiceCategoryWithRelations = TreatmentCategory & {
 declare type TreatmentsArray = TreatmentWithRelations[];
 
 declare type StaffArray = StaffWithRelations[];
+
+declare type PatientsArray = PatientWithRelations[];
 
 declare type AssignedServiceCategoryArray =
   AssignedServiceCategoryWithRelations[];
@@ -99,6 +110,17 @@ declare interface Reservation {
   time: string;
   status: ReservationStatus;
   quickNote?: string;
+}
+
+// In your types.d.ts
+declare interface ReservationWithRelations extends Reservation {
+  user: User;
+  dentist: User;
+  treatment: Treatment;
+  medicalCheckup?: (MedicalCheckup & { dentalRecords: DentalRecord[] }) | null;
+  dateTime: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 declare interface DraggedReservation {

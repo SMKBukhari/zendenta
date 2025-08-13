@@ -33,6 +33,11 @@ export async function GET(req: Request) {
         treatment: true,
         dentist: true,
         user: true,
+        medicalCheckup: {
+          include: {
+            dentalRecords: true,
+          },
+        },
       },
     });
 

@@ -116,6 +116,32 @@ export const AddStaffFormSchema = z.object({
   assignedServices: z.array(AssignedServiceSchema).optional(),
 });
 
+export const CreatePatientSchema = z.object({
+  basicInfo: z.object({
+    name: z.string().min(1, "Name is required"),
+    email: z.string().email("Invalid email address"),
+    phoneNumber: z.string().min(1, "Phone number is required"),
+    address: z.string().optional(),
+    gender: z.enum(["MALE", "FEMALE", "OTHER"]),
+    birthDate: z.string().optional(),
+    city: z.string().optional(),
+    zipCode: z.string().optional(),
+    imageUrl: z.string().optional(),
+  }),
+  medicalHistory: z
+    .array(
+      z.object({
+        condition: z.string().min(1, "Condition is required"),
+        diagnosisDate: z.string().optional(),
+        treatment: z.string().optional(),
+        notes: z.string().optional(),
+      })
+    )
+    .optional(),
+  createdById: z.string().min(1, "Creator ID is required"),
+  primaryDentistId: z.string().optional(),
+});
+
 export const AddCategoryFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters long"),
 });
